@@ -9,7 +9,6 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"strings"
 
 	face "github.com/Kagami/go-face"
 	"github.com/gorilla/mux"
@@ -41,21 +40,21 @@ func main() {
 	fmt.Println("Facial-Auth-server started")
 	router := mux.NewRouter()
 
-	URL := "116.89.189.52:8080/get/feature"
+	URL := "http://116.89.189.52:8080/get/feature"
 
 	// signup/face
 	router.HandleFunc("/signup/face", func(w http.ResponseWriter, r *http.Request) {
 		//리퀘스트 온거 파싱
 		imgFile, name, err := getData(r)
 		if err != nil {
-			fmt.Errorf("getFeature error, Error: ", err.Error())
+			fmt.Println("getData error, Error: ", err.Error())
 			return
 		}
 		//파싱한거 보내서 feature vector 얻어오기
 		var feature face.Descriptor
 		feature, err = getFeature(imgFile, URL)
 		if err != nil {
-			fmt.Errorf("getFeature error, Error: ", err.Error())
+			fmt.Println("getFeature error, Error: ", err.Error())
 			return
 		}
 		//DB에 저장 - 지금은 JSON파일로 저장
@@ -69,12 +68,11 @@ func main() {
 
 func getData(r *http.Request) (multipart.File, string, error) {
 	r.ParseMultipartForm(32 << 20)
-
 	var f multipart.File //nil file
 
 	imgFile, _, err := r.FormFile("user-face")
 	if err != nil {
-		return f, "", err
+		return f, "", fmt.Errorf("error in FormFile(\"user-face\"): " + err.Error())
 	}
 	defer imgFile.Close()
 
@@ -86,20 +84,12 @@ func getData(r *http.Request) (multipart.File, string, error) {
 	*/
 
 	//mdata is just 'user name' now
-	mdata, _, err := r.FormFile("meta-data")
-	if err != nil {
-		return f, "", err
+	mdata := r.PostFormValue("meta-data")
+	if mdata == "" {
+		return f, "", fmt.Errorf("error in FormValue(\"meta-data\"): %s\n", fmt.Errorf("no such key"))
 	}
-	defer mdata.Close()
 
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, mdata)
-	if err != nil {
-		return f, "", err
-	}
-	name := buf.String()
-
-	return imgFile, name, err
+	return imgFile, mdata, err
 }
 
 func getFeature(r io.Reader, u string) (face.Descriptor, error) {
