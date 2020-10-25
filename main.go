@@ -9,6 +9,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strings"
 
 	face "github.com/Kagami/go-face"
 	"github.com/gorilla/mux"
@@ -21,6 +22,11 @@ type Request struct {
 
 type Resp struct {
 	Feature face.Descriptor `json:"feature"`
+	Error   string          `json:"error"`
+}
+
+type Meta struct {
+	Name string `json:name`
 }
 
 const (
@@ -45,7 +51,7 @@ func main() {
 	// signup/face
 	router.HandleFunc("/signup/face", func(w http.ResponseWriter, r *http.Request) {
 		//리퀘스트 온거 파싱
-		imgFile, name, err := getData(r)
+		imgFile, mdata, err := getData(r)
 		if err != nil {
 			fmt.Println("getData error, Error: ", err.Error())
 			return
@@ -57,8 +63,19 @@ func main() {
 			fmt.Println("getFeature error, Error: ", err.Error())
 			return
 		}
+
+		// mdata -> json go value
+		md := new(Meta)
+		rs := strings.NewReader(mdata)
+		dec := json.NewDecoder(rs)
+		err = dec.Decode(md)
+		if err != nil {
+			fmt.Println("error in parsing the meta data, Error: ", err.Error())
+			return
+		}
 		//DB에 저장 - 지금은 JSON파일로 저장
-		fmt.Println(name)
+		fmt.Println(mdata)
+		fmt.Println(md.Name)
 		fmt.Println(feature)
 		//Signup(w, r)
 	}).Methods(http.MethodPost)
@@ -98,7 +115,7 @@ func getFeature(r io.Reader, u string) (face.Descriptor, error) {
 	writer := multipart.NewWriter(body)
 	var f face.Descriptor //nil descriptor
 	// make part
-	part, err := writer.CreateFormField("face-img")
+	part, err := writer.CreateFormFile("face-img", "face-img")
 	if err != nil {
 		return f, err
 	}
@@ -130,5 +147,9 @@ func getFeature(r io.Reader, u string) (face.Descriptor, error) {
 	}
 	rs := new(Resp)
 	json.NewDecoder(resp.Body).Decode(rs)
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return f, fmt.Errorf("responsed error msg: " + rs.Error)
+	}
 	return rs.Feature, nil
 }
