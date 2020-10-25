@@ -27,6 +27,7 @@ const (
 	SuccesMsg string = "signup success"
 	ErrorMsg  string = "you got some errors"
 	URL       string = "http://116.89.189.52:8080/get/feature"
+	DB_name   string = "DB.json"
 )
 
 /*
