@@ -12,12 +12,17 @@ import (
 	face "github.com/Kagami/go-face"
 )
 
+type SignUp_Meta struct {
+	Name string `json:name`
+}
+
 // Signup has /signup/face api logic
 func Signup(w http.ResponseWriter, r *http.Request) {
 	//리퀘스트 온거 파싱
 	imgFile, mdata, err := GetData(r)
 	if err != nil {
 		fmt.Println("GetData error, Error: ", err.Error())
+		RespJson(w, false, err)
 		return
 	}
 	//파싱한거 보내서 feature vector 얻어오기
@@ -25,27 +30,34 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	feature, err = GetFeature(imgFile)
 	if err != nil {
 		fmt.Println("GetFeature error, Error: ", err.Error())
+		RespJson(w, false, err)
 		return
 	}
 
 	// mdata -> json go value
-	md := new(Meta)
+	md := new(SignUp_Meta)
 	rs := strings.NewReader(mdata)
 	dec := json.NewDecoder(rs)
 	err = dec.Decode(md)
 	if err != nil {
 		fmt.Println("error in parsing the meta data, Error: ", err.Error())
+		RespJson(w, false, err)
 		return
 	}
 	//DB에 저장 - 지금은 JSON파일로 저장
 	err = makeFile(md, feature, DB_name)
 	if err != nil {
 		fmt.Println("error in making File, Error: ", err.Error())
+		RespJson(w, false, err)
 		return
 	}
+
+	// 성공한 response
+	RespJson(w, true, nil)
+
 }
 
-func makeFile(m *Meta, f face.Descriptor, fn string) error {
+func makeFile(m *SignUp_Meta, f face.Descriptor, fn string) error {
 	// open file
 	file, err := os.OpenFile(
 		fn, //file name

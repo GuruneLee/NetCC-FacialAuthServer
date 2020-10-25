@@ -5,23 +5,15 @@ import (
 	"log"
 	"net/http"
 
-	face "github.com/Kagami/go-face"
 	"github.com/gorilla/mux"
 )
 
+/*
 type Request struct {
 	Name  string `json:"name"`
 	Image []byte `json:"image"`
 }
-
-type Resp struct {
-	Feature face.Descriptor `json:"feature"`
-	Error   string          `json:"error"`
-}
-
-type Meta struct {
-	Name string `json:name`
-}
+*/
 
 const (
 	SuccesMsg string = "signup success"

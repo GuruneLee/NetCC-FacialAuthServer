@@ -12,6 +12,15 @@ import (
 	face "github.com/Kagami/go-face"
 )
 
+type Resp struct {
+	Error string `json:error`
+}
+
+type GetFeatureResp struct {
+	Feature face.Descriptor `json:"feature"`
+	Error   string          `json:"error"`
+}
+
 //GetData get 'meta-data' and 'multipart.File'
 func GetData(r *http.Request) (multipart.File, string, error) {
 	r.ParseMultipartForm(32 << 20)
@@ -77,11 +86,34 @@ func GetFeature(r io.Reader) (face.Descriptor, error) {
 	if resp.Body == nil {
 		return f, errors.New("empty response body")
 	}
-	rs := new(Resp)
+	rs := new(GetFeatureResp)
 	json.NewDecoder(resp.Body).Decode(rs)
 
 	if resp.StatusCode == http.StatusUnauthorized {
 		return f, fmt.Errorf("responsed error msg: " + rs.Error)
 	}
 	return rs.Feature, nil
+}
+
+func RespJson(w http.ResponseWriter, r bool, e error) {
+	var code int
+	var es string
+	if r == true {
+		code = http.StatusAccepted
+		es = ""
+	} else {
+		code = http.StatusUnauthorized
+		es = e.Error()
+	}
+
+	re := Resp{es}
+	result, err := json.Marshal(re)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(result)
 }

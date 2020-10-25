@@ -8,4 +8,4 @@ COPY common.go common.go
 COPY signup-face.go signup-face.go
 COPY go.mod go.mod
 
-#ENTRYPOINT ["go","run", "."]
+ENTRYPOINT ["go","run", "."]
