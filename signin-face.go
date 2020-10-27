@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -60,7 +59,6 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	rs := strings.NewReader(mdata)
 	dec := json.NewDecoder(rs)
 	dec.Decode(md)
-	fmt.Println(md) //tmp log
 
 	//이름 찾기
 	var of face.Descriptor
@@ -89,7 +87,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	rec.SetSamples(s, c)
 
 	var emsg error
-	catID := rec.ClassifyTreshold(nf, 0.4) //낮을수록 같기 힘듦. 잘 조정하도록
+	catID := rec.ClassifyThreshold(nf, 0.4) //낮을수록 같기 힘듦. 잘 조정하도록
 	if catID < 0 {
 		emsg = errors.New("it's not your face. You need to sign up")
 		RespJSON(w, false, emsg)
