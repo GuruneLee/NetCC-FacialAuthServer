@@ -18,6 +18,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	imgFile, mdata, err := GetData(r)
 	if err != nil {
 		fmt.Println("GetData error, Error: ", err.Error())
+		RespJSON(w, false, err)
 		return
 	}
 	//파싱한거 보내서 feature vector 얻어오기
@@ -25,6 +26,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	feature, err = GetFeature(imgFile)
 	if err != nil {
 		fmt.Println("GetFeature error, Error: ", err.Error())
+		RespJSON(w, false, err)
 		return
 	}
 
@@ -35,14 +37,20 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	err = dec.Decode(md)
 	if err != nil {
 		fmt.Println("error in parsing the meta data, Error: ", err.Error())
+		RespJSON(w, false, err)
 		return
 	}
 	//DB에 저장 - 지금은 JSON파일로 저장
 	err = makeFile(md, feature, DB_name)
 	if err != nil {
 		fmt.Println("error in making File, Error: ", err.Error())
+		RespJSON(w, false, err)
 		return
 	}
+
+	// 성공한 response
+	RespJSON(w, true, nil)
+
 }
 
 func makeFile(m *Meta, f face.Descriptor, fn string) error {
@@ -76,9 +84,8 @@ func makeFile(m *Meta, f face.Descriptor, fn string) error {
 	n := m.Name
 	if jm[n] != nil {
 		return fmt.Errorf("There is same named account...우린 동명이인은 고려안해요")
-	} else {
-		jm[n] = f
 	}
+	jm[n] = f
 
 	// 파일에 다시 쓰기
 	jsonBytes, err := json.MarshalIndent(jm, "", "  ")

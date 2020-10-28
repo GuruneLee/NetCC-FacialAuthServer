@@ -5,28 +5,20 @@ import (
 	"log"
 	"net/http"
 
-	face "github.com/Kagami/go-face"
 	"github.com/gorilla/mux"
 )
 
+/*
 type Request struct {
 	Name  string `json:"name"`
 	Image []byte `json:"image"`
 }
-
-type Resp struct {
-	Feature face.Descriptor `json:"feature"`
-	Error   string          `json:"error"`
-}
-
-type Meta struct {
-	Name string `json:name`
-}
+*/
 
 const (
 	SuccesMsg string = "signup success"
 	ErrorMsg  string = "you got some errors"
-	URL       string = "http://116.89.189.52:8080/get/feature"
+	URL       string = "http://116.89.189.52:8080/get/feature" //face-ai-server's URL
 	DB_name   string = "DB.json"
 )
 
@@ -44,6 +36,7 @@ func main() {
 
 	// signup/face
 	router.HandleFunc("/signup/face", Signup).Methods(http.MethodPost)
+	router.HandleFunc("/signin/face", Signin).Methods(http.MethodPost)
 
 	log.Fatal(http.ListenAndServe(":8081", router))
 }
